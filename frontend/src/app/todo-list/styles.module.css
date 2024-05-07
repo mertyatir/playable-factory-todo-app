@@ -1,0 +1,30 @@
+.input {
+  width: 70%;
+  margin-bottom: 30px;
+}
+
+.addButton {
+  height: 55px;
+  margin-bottom: 30px;
+}
+
+.container {
+  text-align: center;
+  margin-top: 100px;
+}
+
+.list {
+  width: 80%;
+  margin: auto;
+  display: flex;
+  justify-content: space-around;
+  border: 1px solid lightgray;
+}
+
+.text {
+  width: 70%;
+}
+
+.listButtons {
+  margin-left: 10px;
+}
