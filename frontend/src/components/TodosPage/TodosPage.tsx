@@ -9,13 +9,14 @@ import {
   ListItem,
   Container,
   Chip,
-  Fab,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
   Select,
   MenuItem,
+  Avatar,
+  Box,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import { SelectChangeEvent } from "@mui/material/Select";
@@ -35,6 +36,7 @@ type Todo = {
   image: string;
   file: string;
   tags: string[];
+  imageUrl?: string;
 };
 
 export default function TodoList() {
@@ -43,8 +45,6 @@ export default function TodoList() {
   const [isEdited, setIsEdited] = useState(false);
   const [editedId, setEditedId] = useState<number | null>(null);
 
-  const [image, setImage] = useState<string | null>(null);
-  const [file, setFile] = useState<string | null>(null);
   const [tags, setTags] = useState<string[]>([]);
   const [tagsInput, setTagsInput] = useState("");
   const [selectedTag, setSelectedTag] = useState<string | null>("all");
@@ -68,7 +68,30 @@ export default function TodoList() {
     })
       .then((response) => response.json())
       .then((data) => {
-        setTodos(data);
+        const promises = data.map((todo: Todo) => {
+          if (todo.image) {
+            return fetch(
+              `${base_url}/todos/${todo._id}/download/image`,
+
+              {
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                },
+              }
+            )
+              .then((response) => response.blob())
+              .then((blob) => {
+                const url = URL.createObjectURL(blob);
+                return { ...todo, imageUrl: url };
+              });
+          } else {
+            return Promise.resolve(todo);
+          }
+        });
+
+        Promise.all(promises).then((todosWithImages) => {
+          setTodos(todosWithImages);
+        });
       });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -81,7 +104,28 @@ export default function TodoList() {
         },
       })
         .then((response) => response.json())
-        .then((data) => setFilteredTodos(data))
+        .then((data) => {
+          const promises = data.map((todo: Todo) => {
+            if (todo.image) {
+              return fetch(`${base_url}/todos/${todo._id}/download/image`, {
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                },
+              })
+                .then((response) => response.blob())
+                .then((blob) => {
+                  const url = URL.createObjectURL(blob);
+                  return { ...todo, imageUrl: url };
+                });
+            } else {
+              return Promise.resolve(todo);
+            }
+          });
+
+          Promise.all(promises).then((todosWithImages) => {
+            setFilteredTodos(todosWithImages);
+          });
+        })
         .catch((error) => console.error("Error:", error));
     } else {
       setFilteredTodos(todos);
@@ -229,8 +273,19 @@ export default function TodoList() {
         body: JSON.stringify({ completed: updatedTodo.completed }),
       })
         .then((response) => response.json())
-        .then((data) => {
-          setTodos(todos.map((todo) => (todo._id === data._id ? data : todo)));
+        .then((updatedTodo) => {
+          // Find the old todo item in the state
+          const oldTodo = todos.find((todo) => todo._id === _id);
+
+          if (oldTodo) {
+            // Preserve the imageUrl property
+            updatedTodo.imageUrl = oldTodo.imageUrl;
+          }
+
+          // Update the state with the updated todo item
+          setTodos(
+            todos.map((todo) => (todo._id === _id ? updatedTodo : todo))
+          );
         });
     }
   };
@@ -244,47 +299,121 @@ export default function TodoList() {
     }
   };
 
+  const handleImageUpload = (id: number) => async (e: any) => {
+    const file = e.target.files[0];
+    const formData = new FormData();
+    formData.append("image", file);
+
+    fetch(`${base_url}/todos/${id}/image`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: formData,
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        setTodos((prevTodos) =>
+          prevTodos.map((todo) =>
+            todo._id === id ? { ...todo, imageUrl: data.url } : todo
+          )
+        );
+      })
+      .catch((error) => {
+        console.error("Error:", error);
+      });
+  };
+
+  const handleFileUpload = (id: number) => async (e: any) => {
+    const file = e.target.files[0];
+    const formData = new FormData();
+    formData.append("file", file);
+
+    fetch(`${base_url}/todos/${id}/file`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: formData,
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        setTodos((prevTodos) =>
+          prevTodos.map((todo) =>
+            todo._id === id ? { ...todo, file: data.url } : todo
+          )
+        );
+      })
+      .catch((error) => {
+        console.error("Error:", error);
+      });
+  };
+
+  const handleFileDownload = (id: number) => {
+    fetch(`${base_url}/todos/${id}/download/file`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
+      .then((response) => response.blob())
+      .then((blob) => {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "file";
+        a.click();
+      });
+  };
+
   return (
     <Container component="main" className={styles.container}>
-      <TextField
-        variant="outlined"
-        onChange={onChange}
-        label="Type your task"
-        value={inputVal}
-        className={styles.input}
-      ></TextField>
+      <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+        <Box sx={{ justifyContent: "flex-start" }}>
+          <TextField
+            variant="outlined"
+            onChange={onChange}
+            label="Type your task"
+            value={inputVal}
+            className={styles.input}
+          ></TextField>
 
-      <Button
-        size="large"
-        variant={isEdited ? "outlined" : "contained"}
-        color="primary"
-        onClick={handleClick}
-        disabled={inputVal ? false : true}
-        className={styles.addButton}
-      >
-        {isEdited ? "Edit Task" : "Add Task"}
-      </Button>
-      <TextField
-        variant="outlined"
-        onChange={onSearchChange}
-        label="Search tasks"
-        value={search}
-        className={styles.searchInput}
-      ></TextField>
+          <Button
+            size="large"
+            variant={isEdited ? "outlined" : "contained"}
+            color="primary"
+            onClick={handleClick}
+            disabled={inputVal ? false : true}
+            className={styles.addButton}
+          >
+            {isEdited ? "Edit Task" : "Add Task"}
+          </Button>
+        </Box>
 
-      <Select
-        labelId="demo-simple-select-label"
-        id="demo-simple-select"
-        value={selectedTag}
-        onChange={handleTagChange}
-      >
-        <MenuItem value="all">All</MenuItem>
-        {tags.map((tag, index) => (
-          <MenuItem key={index} value={tag}>
-            {tag}
-          </MenuItem>
-        ))}
-      </Select>
+        <Box>
+          <TextField
+            variant="outlined"
+            onChange={onSearchChange}
+            label="Search tasks"
+            value={search}
+            className={styles.searchInput}
+          ></TextField>
+
+          <Select
+            labelId="demo-simple-select-label"
+            id="demo-simple-select"
+            value={selectedTag}
+            onChange={handleTagChange}
+          >
+            <MenuItem value="all">All</MenuItem>
+            {tags.map((tag, index) => (
+              <MenuItem key={index} value={tag}>
+                {tag}
+              </MenuItem>
+            ))}
+          </Select>
+        </Box>
+      </Box>
+
       <List>
         {filteredTodos
           .filter((todo) =>
@@ -297,6 +426,24 @@ export default function TodoList() {
           .map((todo) => {
             return (
               <ListItem key={todo._id} className={styles.list}>
+                <label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageUpload(todo._id)}
+                    style={{ display: "none" }}
+                  />
+                  {todo.imageUrl ? (
+                    <Image
+                      src={todo.imageUrl}
+                      alt="Todo image"
+                      width={100}
+                      height={100}
+                    />
+                  ) : (
+                    <Avatar className={styles.avatar} variant="square" />
+                  )}
+                </label>
                 <Checkbox
                   onClick={() => handleDone(todo._id)}
                   checked={todo.completed}
@@ -308,16 +455,37 @@ export default function TodoList() {
                 >
                   {todo.title}
                 </Typography>
-                <Fab
+
+                <div className={styles.tag}>
+                  {todo.tags.map((tag, index) => (
+                    <Chip
+                      key={index}
+                      label={tag}
+                      variant="outlined"
+                      onDelete={() => handleTagDelete(tag, todo._id)}
+                    />
+                  ))}
+                </div>
+                <Button
+                  className={styles.addTagButton}
                   color="primary"
-                  aria-label="add"
                   onClick={() => {
                     setCurrentTodoId(todo._id);
                     setDialogOpen(true);
                   }}
                 >
                   <AddIcon />
-                </Fab>
+                </Button>
+
+                <div>
+                  <input type="file" onChange={handleFileUpload(todo._id)} />
+                  {todo.file && (
+                    <button onClick={() => handleFileDownload(todo._id)}>
+                      Download
+                    </button>
+                  )}
+                </div>
+
                 <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)}>
                   <DialogTitle>Add Tag</DialogTitle>
                   <DialogContent>
@@ -347,14 +515,6 @@ export default function TodoList() {
                   </DialogActions>
                 </Dialog>
 
-                {todo.tags.map((tag, index) => (
-                  <Chip
-                    key={index}
-                    label={tag}
-                    variant="outlined"
-                    onDelete={() => handleTagDelete(tag, todo._id)}
-                  />
-                ))}
                 <Button
                   onClick={() => handleEdit(todo._id)}
                   variant="contained"

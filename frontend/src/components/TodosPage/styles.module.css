@@ -1,11 +1,6 @@
-.input {
-  width: 70%;
-  margin-bottom: 30px;
-}
-
 .addButton {
   height: 55px;
-  margin-bottom: 30px;
+  margin-left: 10px;
 }
 
 .container {
@@ -14,17 +9,29 @@
 }
 
 .list {
-  width: 80%;
+  width: 100%;
   margin: auto;
   display: flex;
   justify-content: space-around;
   border: 1px solid lightgray;
 }
 
-.text {
-  width: 70%;
-}
-
 .listButtons {
   margin-left: 10px;
+}
+
+.addTagButton {
+  height: 30px;
+  width: 30px;
+  margin-left: 0px;
+  margin-right: auto;
+}
+
+.tag {
+  margin-left: 10px;
+}
+
+.avatar:hover {
+  opacity: 0.5;
+  cursor: pointer;
 }

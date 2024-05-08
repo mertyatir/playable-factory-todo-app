@@ -1,13 +1,6 @@
 import Todo from "../models/Todo.js";
 
 import path from "path";
-import fs from "fs";
-
-import { fileURLToPath } from "url";
-import { dirname } from "path";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
 
 const getAllTodos = async (req, res) => {
   const todos = await Todo.getAllTodos(req.user.userId).catch((error) => {
@@ -27,6 +20,9 @@ const createTodo = async (req, res) => {
 };
 
 const getTodoById = async (req, res) => {
+  if (req.params.id === "null") {
+    return res.status(400).json({ message: "Invalid id" });
+  }
   const todo = await Todo.getTodoById(req.params.id, req.user.userId).catch(
     (error) => {
       return res.status(400).json({ message: error.message });
@@ -81,7 +77,11 @@ const deleteTodo = async (req, res) => {
   if (!todo) {
     return res.status(404).json({ message: "Todo not found" });
   }
-  res.json(todo);
+  try {
+    res.json(todo);
+  } catch (error) {
+    console.log(error);
+  }
 };
 
 const uploadImage = async (req, res) => {
@@ -99,7 +99,12 @@ const uploadImage = async (req, res) => {
   ).catch((error) => {
     return res.status(400).json({ message: error.message });
   });
-  res.json(todo);
+
+  try {
+    res.json(todo);
+  } catch (error) {
+    console.log(error);
+  }
 };
 
 const uploadFile = async (req, res) => {
@@ -107,7 +112,9 @@ const uploadFile = async (req, res) => {
     req.params.id,
     req.user.userId,
     req.file.path
-  );
+  ).catch((error) => {
+    return res.status(400).json({ message: error.message });
+  });
   res.json(todo);
 };
 
@@ -156,6 +163,9 @@ const searchTodos = async (req, res) => {
 };
 
 const downloadFile = async (req, res) => {
+  if (req.params.id === "null") {
+    return res.status(400).json({ message: "Invalid id" });
+  }
   const filePath = await Todo.downloadFile(
     req.params.id,
     req.user.userId
@@ -176,6 +186,9 @@ const downloadFile = async (req, res) => {
 };
 
 const downloadImage = async (req, res) => {
+  if (req.params.id === "null") {
+    return res.status(400).json({ message: "Invalid id" });
+  }
   const filePath = await Todo.downloadImage(
     req.params.id,
     req.user.userId

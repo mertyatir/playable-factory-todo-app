@@ -75,14 +75,18 @@ const deleteTodo = async (id, user) => {
     throw new Error("Todo not found");
   }
 
-  // Delete the image and file if they exist
-  if (todo.image) {
-    const imagePath = path.resolve(todo.image);
-    await unlink(imagePath);
-  }
-  if (todo.file) {
-    const filePath = path.resolve(todo.file);
-    await unlink(filePath);
+  try {
+    // Delete the image and file if they exist
+    if (todo.image) {
+      const imagePath = path.resolve(todo.image);
+      await unlink(imagePath);
+    }
+    if (todo.file) {
+      const filePath = path.resolve(todo.file);
+      await unlink(filePath);
+    }
+  } catch (error) {
+    console.log(error);
   }
 
   todo = await Todo.findOneAndDelete({ _id: id, user });
