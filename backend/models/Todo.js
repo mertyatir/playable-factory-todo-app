@@ -169,6 +169,31 @@ const searchTodos = async (query, user) => {
   });
   return todos;
 };
+
+const downloadFile = async (id, userId) => {
+  const todo = await Todo.findOne({
+    _id: id,
+    user: userId,
+  });
+  if (!todo || !todo.file) {
+    throw new Error("File not found");
+  }
+  const filePath = path.resolve(todo.file);
+  return filePath;
+};
+
+const downloadImage = async (id, userId) => {
+  const todo = await Todo.findOne({
+    _id: id,
+    user: userId,
+  });
+  if (!todo || !todo.image) {
+    throw new Error("File not found");
+  }
+  const filePath = path.resolve(todo.image);
+  return filePath;
+};
+
 export default {
   getAllTodos,
   createTodo,
@@ -181,4 +206,6 @@ export default {
   addTag,
   removeTag,
   searchTodos,
+  downloadFile,
+  downloadImage,
 };

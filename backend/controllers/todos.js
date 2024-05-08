@@ -1,7 +1,18 @@
 import Todo from "../models/Todo.js";
 
+import path from "path";
+import fs from "fs";
+
+import { fileURLToPath } from "url";
+import { dirname } from "path";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
 const getAllTodos = async (req, res) => {
-  const todos = await Todo.getAllTodos(req.user.userId);
+  const todos = await Todo.getAllTodos(req.user.userId).catch((error) => {
+    return res.status(400).json({ message: error.message });
+  });
   res.json(todos);
 };
 
@@ -85,7 +96,9 @@ const uploadImage = async (req, res) => {
     req.params.id,
     req.user.userId,
     req.file.path
-  );
+  ).catch((error) => {
+    return res.status(400).json({ message: error.message });
+  });
   res.json(todo);
 };
 
@@ -142,6 +155,46 @@ const searchTodos = async (req, res) => {
   res.json(todos);
 };
 
+const downloadFile = async (req, res) => {
+  const filePath = await Todo.downloadFile(
+    req.params.id,
+    req.user.userId
+  ).catch((error) => {
+    return res.status(404).json({ message: error.message });
+  });
+
+  // Set the headers to instruct the browser to download the file
+  res.setHeader(
+    "Content-Disposition",
+    `attachment; filename=${path.basename(filePath)}`
+  );
+  res.setHeader("Content-Transfer-Encoding", "binary");
+  res.setHeader("Content-Type", "application/octet-stream");
+
+  // Send the file as a response
+  res.download(filePath);
+};
+
+const downloadImage = async (req, res) => {
+  const filePath = await Todo.downloadImage(
+    req.params.id,
+    req.user.userId
+  ).catch((error) => {
+    return res.status(404).json({ message: error.message });
+  });
+
+  // Set the headers to instruct the browser to download the file
+  res.setHeader(
+    "Content-Disposition",
+    `attachment; filename=${path.basename(filePath)}`
+  );
+  res.setHeader("Content-Transfer-Encoding", "binary");
+  res.setHeader("Content-Type", "application/octet-stream");
+
+  // Send the file as a response
+  res.download(filePath);
+};
+
 export default {
   getAllTodos,
   createTodo,
@@ -154,4 +207,6 @@ export default {
   addTag,
   removeTag,
   searchTodos,
+  downloadFile,
+  downloadImage,
 };

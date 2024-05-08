@@ -3,7 +3,16 @@ import controllers from "../controllers/index.js";
 import authenticate from "../middlewares/authenticate.js";
 import multer from "multer";
 
-const upload = multer({ dest: "uploads/" });
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, "uploads/");
+  },
+  filename: function (req, file, cb) {
+    cb(null, file.originalname);
+  },
+});
+
+const upload = multer({ storage: storage });
 
 const router = express.Router();
 
@@ -49,5 +58,13 @@ router.put("/:id/addTag", authenticate, controllers.todos.addTag);
 
 // Remove a tag from a specific ToDo item by its ID
 router.put("/:id/removeTag", authenticate, controllers.todos.removeTag);
+
+router.get("/:id/download/file", authenticate, controllers.todos.downloadFile);
+
+router.get(
+  "/:id/download/image",
+  authenticate,
+  controllers.todos.downloadImage
+);
 
 export default router;
