@@ -20,3 +20,6 @@
 
 3.  use frontend to register (http://localhost:3000/signup)
     log in with the credentials you registered with (http://localhost:3000/)
+
+
+.env files are included for convenience
