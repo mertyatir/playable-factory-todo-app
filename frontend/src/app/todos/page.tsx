@@ -1,4 +1,4 @@
-import TodosPage from "@/components/TodosPage/TodosPage";
+import TodosPage from "@/components/Pages/TodosPage/TodosPage";
 
 export default function Home() {
   return <TodosPage />;
