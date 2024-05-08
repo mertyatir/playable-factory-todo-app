@@ -1,9 +1,22 @@
 # playable-factory-todo-app
 
-https://www.mongodb.com/try/download/community
-sudo systemctl start mongod
-mongodb-compass
-create todo-app database
+1.  download mongodb community
+    https://www.mongodb.com/try/download/community
+    (
 
-npm run dev (frontend)
-npm start (backend)
+    for ubuntu 22.04:
+    install it with `dpkg -i `
+    then start mongoDb service with `sudo systemctl start mongod`
+    optional: you can use mongodb-compass to interact with database
+    )
+
+2.  `git clone https://github.com/mertyatir/playable-factory-todo-app.git`
+    `cd backend`
+    `npm install`
+    start the server with `npm start`
+    with a new terminal cd to frontend
+    `npm install`
+    `npm run dev`
+
+3.  use frontend to register (http://localhost:3000/signup)
+    log in with the credentials you registered with (http://localhost:3000/)
