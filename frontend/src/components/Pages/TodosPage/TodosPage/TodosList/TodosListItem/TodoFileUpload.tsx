@@ -25,11 +25,23 @@ export const TodoFileUpload: React.FC<TodoFileUploadProps> = ({
     })
       .then((response) => response.json())
       .then((data) => {
-        setTodos((prevTodos) =>
-          prevTodos.map((todo) =>
-            todo._id === id ? { ...todo, file: data.url } : todo
-          )
-        );
+        // Fetch the file as a blob
+        return fetch(`${base_url}/todos/${id}/download/file`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        })
+          .then((response) => response.blob())
+          .then((blob) => {
+            // Create an object URL from the blob
+            const url = URL.createObjectURL(blob);
+            // Set this URL as the fileUrl property of the todo
+            setTodos((prevTodos) =>
+              prevTodos.map((todo) =>
+                todo._id === id ? { ...todo, fileUrl: url, file: file } : todo
+              )
+            );
+          });
       })
       .catch((error) => {
         console.error("Error:", error);
@@ -52,11 +64,14 @@ export const TodoFileUpload: React.FC<TodoFileUploadProps> = ({
       });
   };
 
+  console.log(todo);
   return (
     <div>
-      <input type="file" onChange={handleFileUpload(todo._id)} />
+      <input type="file" onChange={(e) => handleFileUpload(todo._id)(e)} />
       {todo.file && (
-        <button onClick={() => handleFileDownload(todo._id)}>Download</button>
+        <button onClick={() => handleFileDownload(todo._id)}>
+          Download {todo.file.name}
+        </button>
       )}
     </div>
   );
