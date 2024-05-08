@@ -64,14 +64,11 @@ export const TodoFileUpload: React.FC<TodoFileUploadProps> = ({
       });
   };
 
-  console.log(todo);
   return (
     <div>
       <input type="file" onChange={(e) => handleFileUpload(todo._id)(e)} />
       {todo.file && (
-        <button onClick={() => handleFileDownload(todo._id)}>
-          Download {todo.file.name}
-        </button>
+        <button onClick={() => handleFileDownload(todo._id)}>Download</button>
       )}
     </div>
   );
