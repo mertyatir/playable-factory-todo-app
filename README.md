@@ -1,4 +1,4 @@
-# playable-factory-todo-app
+# playable-factory-todo-app with MERN stack (MongoDB, Express, React, Node.js)
 
 1.  download mongodb community
     https://www.mongodb.com/try/download/community
